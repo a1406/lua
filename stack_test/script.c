@@ -21,7 +21,7 @@ struct ldb
 	int bpcount; /* Number of valid entries inside bp. */
 	int step;   /* Stop at next line ragardless of breakpoints. */	
 	int luabp;  /* Stop at next line because redis.breakpoint() was called. */
-	char *current_file;
+	const char *current_file;
 	int current_line;
 };
 
@@ -37,18 +37,42 @@ int ldb_is_break(int line, const char *filename)
 	return (0);
 }
 
+int ldb_add_break(int line, const char *filename)
+{
+	if (ldb.bpcount >= LDB_BREAKPOINTS_MAX - 1)
+		return -1;
+	ldb.bp[ldb.bpcount].filename = strdup(filename);
+	ldb.bp[ldb.bpcount].linenum = line;
+	return (0);
+}
+
 void ldb_loop()
 {
 	static char ldb_buf[1024];
-	char command[64], param1[128];
+	char command[64], param1[128], param2[64];
 	while (fgets(ldb_buf, 1024, stdin))
 	{	
-		int n = sscanf(ldb_buf, "%s %s", command, param1);
+		int n = sscanf(ldb_buf, "%s %s %s", command, param1, param2);
 		if (n <= 0)
 			continue;
 
 		if (strcmp(command, "b") == 0 || strcmp(command, "break") == 0)
 		{
+			switch (n)
+			{
+				case 1:
+					ldb_add_break(ldb.current_line, ldb.current_file);
+					break;
+				case 2:
+					ldb_add_break(atoi(param2), ldb.current_file);										
+					break;
+				case 3:
+					ldb_add_break(atoi(param2), param1);					
+					break;
+				default:
+					printf("break filename line\n");
+					break;
+			}
 		}
 		else if (strcmp(command, "test") == 0)
 		{
@@ -110,6 +134,7 @@ void luaLdbLineHook(lua_State *lua, lua_Debug *ar) {
     lua_getstack(lua,0,ar);
     lua_getinfo(lua,"Sl",ar);
     ldb.current_line = ar->currentline;
+	ldb.current_file = ar->source;
 
     int bp = ldb_is_break(ar->currentline, ar->source) || ldb.luabp;
 //    int timeout = 0;
