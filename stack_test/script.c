@@ -109,6 +109,13 @@ static void step_cmd()
 	ldb.step = 1;
 }
 
+static void info_cmd(int n, char *param1)
+{
+	if (strcmp(param1, "b") == 0 || strcmp(param1, "break"))
+	{
+	}
+}
+
 int ldb_step()
 {
 	static char ldb_buf[1024];
@@ -133,6 +140,10 @@ int ldb_step()
 	else if (strcmp(command, "s") == 0 || strcmp(command, "step") == 0)
 	{
 		step_cmd();
+	}
+	else if (strcmp(command, "info") == 0)
+	{
+		info_cmd(n, param1);
 	}
 	else if (strcmp(command, "test") == 0)
 	{
