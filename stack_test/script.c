@@ -50,6 +50,9 @@ int ldb_step()
 {
 	static char ldb_buf[1024];
 	char command[64], param1[128], param2[64];
+
+	printf("$>>>> ");
+	
 	fgets(ldb_buf, 1024, stdin);
 
 	int n = sscanf(ldb_buf, "%s %s %s", command, param1, param2);
@@ -105,6 +108,10 @@ int ldb_step()
 	else if (strcmp(command, "r") == 0 || strcmp(command, "run") == 0)
 	{
 	}
+	else if (strcmp(command, "q") == 0 || strcmp(command, "quit") == 0)
+	{
+		return (-1);
+	}
 	else
 	{
 		printf("unknow command %s\n", command);
@@ -120,7 +127,7 @@ int ldb_step()
 
 void ldb_loop()
 {
-	while (ldb_step())
+	while (ldb_step() == 0)
 	{
 	}
 }
@@ -157,6 +164,7 @@ void luaLdbLineHook(lua_State *lua, lua_Debug *ar) {
 //        else if (timeout) reason = "timeout reached, infinite loop?";
         ldb.step = 0;
         ldb.luabp = 0;
+		ldb_step();
 //        ldbLog(sdscatprintf(sdsempty(),
 //            "* Stopped at %d, stop reason = %s",
 //            ldb.currentline, reason));
