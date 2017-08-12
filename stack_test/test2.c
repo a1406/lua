@@ -5,6 +5,7 @@
 #include "lualib.h"
 #include "lauxlib.h"
 
+extern void ldb_loop();
 extern void luaLdbLineHook(lua_State *lua, lua_Debug *ar);
 
 void stack_dump(lua_State* L, char *head)
@@ -118,6 +119,8 @@ int main(int argc, char *argv[])
 	lua_rawgetp(L, LUA_REGISTRYINDEX, &L);	
 	lua_pushinteger(L, 3);
 	lua_pcall(L, 1, 0, 0);
+
+	ldb_loop(L);
 
 	if (lua_gettop(L) != 0)
 	{
