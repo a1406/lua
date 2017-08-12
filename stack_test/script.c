@@ -46,87 +46,82 @@ int ldb_add_break(int line, const char *filename)
 	return (0);
 }
 
-void ldb_loop()
+int ldb_step()
 {
 	static char ldb_buf[1024];
 	char command[64], param1[128], param2[64];
-	while (fgets(ldb_buf, 1024, stdin))
-	{	
-		int n = sscanf(ldb_buf, "%s %s %s", command, param1, param2);
-		if (n <= 0)
-			continue;
+	fgets(ldb_buf, 1024, stdin);
 
-		if (strcmp(command, "b") == 0 || strcmp(command, "break") == 0)
-		{
-			switch (n)
-			{
-				case 1:
-					ldb_add_break(ldb.current_line, ldb.current_file);
-					break;
-				case 2:
-					ldb_add_break(atoi(param2), ldb.current_file);										
-					break;
-				case 3:
-					ldb_add_break(atoi(param2), param1);					
-					break;
-				default:
-					printf("break filename line\n");
-					break;
-			}
-		}
-		else if (strcmp(command, "test") == 0)
-		{
-			if (n != 2)
-			{
-				printf("no param\n");
-				continue;
-			}
-			lua_rawgetp(L, LUA_REGISTRYINDEX, &L);
-			lua_pushinteger(L, atoi(param1));
-			if (lua_pcall(L, 1, 0, 0) != LUA_OK)
-			{
-				luaL_checktype(L, -1, LUA_TSTRING);
-				printf("pcall fail, err = %s\n", lua_tostring(L, -1));
-				lua_pop(L, 1);
-			}
-		}
-		else if (strcmp(command, "r") == 0 || strcmp(command, "run") == 0)
-		{
-			if (n != 2)
-			{
-				printf("no lua file\n");
-				continue;
-			}
-			if (luaL_dofile(L, "t2.lua") != LUA_OK)
-			{
-				printf("wrong lua file\n");
-			}
-		}
-		else if (strcmp(command, "r") == 0 || strcmp(command, "run") == 0)
-		{
-		}
-		else
-		{
-			printf("unknow command %s\n", command);
-		}
+	int n = sscanf(ldb_buf, "%s %s %s", command, param1, param2);
+	if (n <= 0)
+		return (0);
 
-		if (lua_gettop(L) != 0)
+	if (strcmp(command, "b") == 0 || strcmp(command, "break") == 0)
+	{
+		switch (n)
 		{
-			printf("stack no empty\n");
+			case 1:
+				ldb_add_break(ldb.current_line, ldb.current_file);
+				break;
+			case 2:
+				ldb_add_break(atoi(param2), ldb.current_file);										
+				break;
+			case 3:
+				ldb_add_break(atoi(param2), param1);					
+				break;
+			default:
+				printf("break filename line\n");
+				break;
+		}
+	}
+	else if (strcmp(command, "test") == 0)
+	{
+		if (n != 2)
+		{
+			printf("no param\n");
+			return (0);
+		}
+		lua_rawgetp(L, LUA_REGISTRYINDEX, &L);
+		lua_pushinteger(L, atoi(param1));
+		if (lua_pcall(L, 1, 0, 0) != LUA_OK)
+		{
+			luaL_checktype(L, -1, LUA_TSTRING);
+			printf("pcall fail, err = %s\n", lua_tostring(L, -1));
+			lua_pop(L, 1);
+		}
+	}
+	else if (strcmp(command, "r") == 0 || strcmp(command, "run") == 0)
+	{
+		if (n != 2)
+		{
+			printf("no lua file\n");
+			return (0);
+		}
+		if (luaL_dofile(L, "t2.lua") != LUA_OK)
+		{
+			printf("wrong lua file\n");
+		}
+	}
+	else if (strcmp(command, "r") == 0 || strcmp(command, "run") == 0)
+	{
+	}
+	else
+	{
+		printf("unknow command %s\n", command);
+	}
+
+	if (lua_gettop(L) != 0)
+	{
+		printf("stack no empty\n");
 //			stack_dump(L, "all end");
-		}
-		
-// 		switch (n)
-// 		{
-// 			case 1:
-// 				printf("%s\n", command);
-// 				break;
-// 			case 2:
-// 				printf("[%s] %s\n", command, param1);
-// 				break;
-// 			default:
-// 				printf("n = %d\n", n);
-// 		}
+	}
+	return (0);
+}
+
+void ldb_loop()
+{
+	while (ldb_step())
+	{
 	}
 }
 
