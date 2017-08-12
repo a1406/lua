@@ -113,7 +113,15 @@ static void info_cmd(int n, char *param1)
 {
 	if (strcmp(param1, "b") == 0 || strcmp(param1, "break"))
 	{
+		for (int i = 0; i < ldb.bpcount; ++i)
+		{
+			printf("break file[%s] line[%d]\n", ldb.bp[i].filename, ldb.bp[i].linenum);
+		}
 	}
+}
+
+static void continue_cmd()
+{
 }
 
 int ldb_step()
@@ -136,10 +144,12 @@ int ldb_step()
 	else if (strcmp(command, "n") == 0 || strcmp(command, "next") == 0)
 	{
 		next_cmd();
+		return 1;
 	}
 	else if (strcmp(command, "s") == 0 || strcmp(command, "step") == 0)
 	{
 		step_cmd();
+		return 1;
 	}
 	else if (strcmp(command, "info") == 0)
 	{
@@ -148,10 +158,17 @@ int ldb_step()
 	else if (strcmp(command, "test") == 0)
 	{
 		test_cmd(n, param1);
+		return 1;
+	}
+	else if (strcmp(command, "c") == 0 || strcmp(command, "continue") == 0)
+	{
+		continue_cmd(n, param1);
+		return 1;
 	}
 	else if (strcmp(command, "r") == 0 || strcmp(command, "run") == 0)
 	{
 		run_cmd(n, param1);
+		return 1;
 	}
 	else if (strcmp(command, "q") == 0 || strcmp(command, "quit") == 0)
 	{
@@ -162,11 +179,6 @@ int ldb_step()
 		printf("unknow command %s\n", command);
 	}
 
-	if (lua_gettop(L) != 0)
-	{
-		printf("stack no empty\n");
-		stack_dump(L, "ldb step");
-	}
 	return (0);
 }
 
@@ -174,6 +186,11 @@ void ldb_loop()
 {
 	while (ldb_step() == 0)
 	{
+		if (lua_gettop(L) != 0)
+		{
+			printf("stack no empty\n");
+			stack_dump(L, "ldb step");
+		}
 	}
 }
 
@@ -210,7 +227,7 @@ void luaLdbLineHook(lua_State *lua, lua_Debug *ar) {
 //        else if (timeout) reason = "timeout reached, infinite loop?";
         ldb.step = 0;
         ldb.luabp = 0;
-		ldb_step();
+		ldb_loop();
 //        ldbLog(sdscatprintf(sdsempty(),
 //            "* Stopped at %d, stop reason = %s",
 //            ldb.currentline, reason));
