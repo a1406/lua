@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 	lua_pushinteger(L, 3);
 	lua_pcall(L, 1, 0, 0);
 
-	ldb_loop(L);
+	ldb_loop();
 
 	if (lua_gettop(L) != 0)
 	{

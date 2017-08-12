@@ -6,6 +6,8 @@
 #include "lualib.h"
 #include "lauxlib.h"
 
+extern struct lua_State *L;
+
 #define LDB_BREAKPOINTS_MAX 10
 struct ldb_break
 {
@@ -35,62 +37,55 @@ int ldb_is_break(int line, const char *filename)
 	return (0);
 }
 
-void ldb_loop(struct lua_State *L)
+void ldb_loop()
 {
 	static char ldb_buf[1024];
-	char command, param1[64];
+	char command[64], param1[128];
 	while (fgets(ldb_buf, 1024, stdin))
 	{	
-		int n = sscanf(ldb_buf, "%c %s", command, param1);
+		int n = sscanf(ldb_buf, "%s %s", command, param1);
 		if (n <= 0)
 			continue;
-		switch (command)
+
+		if (strcmp(command, "b") == 0 || strcmp(command, "break") == 0)
 		{
-			case 'b':
-			{
-			}
-			break;
-			case 't':
-			{
-				if (n != 2)
-				{
-					printf("no lua file\n");
-					break;
-				}
-				lua_rawgetp(L, LUA_REGISTRYINDEX, &L);
-				lua_pushinteger(L, atoi(param1));
-				if (lua_pcall(L, 1, 0, 0) != LUA_OK)
-				{
-					luaL_checktype(L, -1, LUA_TSTRING);
-					printf("pcall fail, err = %s\n", lua_tostring(L, -1));
-					lua_pop(L, 1);
-				}
-			}
-			break;
-			case 'r':
-			{
-				if (n != 2)
-				{
-					printf("no lua file\n");
-					break;
-				}
-				if (luaL_dofile(L, "t2.lua") != LUA_OK)
-				{
-					printf("wrong lua file\n");
-					break;
-				}
-			}
-			break;
-			case 'n':   //
-			{
-			}
-			break;
-			default:
-			{
-				printf("unknow command %c\n", command);
-			}
-			break;
 		}
+		else if (strcmp(command, "test") == 0)
+		{
+			if (n != 2)
+			{
+				printf("no param\n");
+				continue;
+			}
+			lua_rawgetp(L, LUA_REGISTRYINDEX, &L);
+			lua_pushinteger(L, atoi(param1));
+			if (lua_pcall(L, 1, 0, 0) != LUA_OK)
+			{
+				luaL_checktype(L, -1, LUA_TSTRING);
+				printf("pcall fail, err = %s\n", lua_tostring(L, -1));
+				lua_pop(L, 1);
+			}
+		}
+		else if (strcmp(command, "r") == 0 || strcmp(command, "run") == 0)
+		{
+			if (n != 2)
+			{
+				printf("no lua file\n");
+				continue;
+			}
+			if (luaL_dofile(L, "t2.lua") != LUA_OK)
+			{
+				printf("wrong lua file\n");
+			}
+		}
+		else if (strcmp(command, "r") == 0 || strcmp(command, "run") == 0)
+		{
+		}
+		else
+		{
+			printf("unknow command %s\n", command);
+		}
+
 		if (lua_gettop(L) != 0)
 		{
 			printf("stack no empty\n");
