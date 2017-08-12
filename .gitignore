@@ -1,0 +1,9 @@
+*.o
+lua
+.gitignore
+cscope*
+*.a
+*.so
+*~
+#*
+

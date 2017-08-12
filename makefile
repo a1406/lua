@@ -44,7 +44,7 @@ CWARNS= $(CWARNSCPP)  $(CWARNSC)
 # -DLUA_USE_CTYPE -DLUA_USE_APICHECK
 # (in clang, '-ftrapv' for runtime checks of integer overflows)
 # -fsanitize=undefined -ftrapv
-TESTS= -DLUA_USER_H='"ltests.h"'
+#TESTS= -DLUA_USER_H='"ltests.h"'
 
 # -mtune=native -fomit-frame-pointer
 # -fno-stack-protector
@@ -58,8 +58,8 @@ MYLDFLAGS= $(LOCAL) -Wl,-E
 MYLIBS= -ldl -lreadline
 
 
-CC= clang-3.8
-CFLAGS= -Wall -O2 $(MYCFLAGS)
+CC= gcc
+CFLAGS= -Wall -g  -O0 $(MYCFLAGS)
 AR= ar rcu
 RANLIB= ranlib
 RM= rm -f
