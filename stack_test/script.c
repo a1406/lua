@@ -7,6 +7,7 @@
 #include "lauxlib.h"
 
 extern struct lua_State *L;
+extern void stack_dump(lua_State* L, char *head);
 
 #define LDB_BREAKPOINTS_MAX 10
 struct ldb_break
@@ -31,7 +32,7 @@ int ldb_is_break(int line, const char *filename)
 {
 	for (int i = 0; i < ldb.bpcount; ++i)
 	{
-		if (line == ldb.bp[i].linenum && strcmp(filename, ldb.bp[i].filename) == 0)
+		if (line == ldb.bp[i].linenum && strcmp(filename+1, ldb.bp[i].filename) == 0)
 			return (1);
 	}
 	return (0);
@@ -43,7 +44,69 @@ int ldb_add_break(int line, const char *filename)
 		return -1;
 	ldb.bp[ldb.bpcount].filename = strdup(filename);
 	ldb.bp[ldb.bpcount].linenum = line;
+	++ldb.bpcount;
 	return (0);
+}
+
+static void break_cmd(int n, char *param1, char *param2)
+{
+	switch (n)
+	{
+		case 1:
+			ldb_add_break(ldb.current_line, ldb.current_file);
+			break;
+		case 2:
+			ldb_add_break(atoi(param2), ldb.current_file);										
+			break;
+		case 3:
+			ldb_add_break(atoi(param2), param1);					
+			break;
+		default:
+			printf("break filename line\n");
+			break;
+	}	
+}
+
+static int test_cmd(int n, char *param1)
+{
+	if (n != 2)
+	{
+		printf("no param\n");
+		return (0);
+	}
+	lua_rawgetp(L, LUA_REGISTRYINDEX, &L);
+	lua_pushinteger(L, atoi(param1));
+	if (lua_pcall(L, 1, 0, 0) != LUA_OK)
+	{
+		luaL_checktype(L, -1, LUA_TSTRING);
+		printf("pcall fail, err = %s\n", lua_tostring(L, -1));
+		lua_pop(L, 1);
+	}
+	return (0);	
+}
+
+static int run_cmd(int n, char *param1)
+{
+	if (n != 2)
+	{
+		printf("no lua file\n");
+		return (0);
+	}
+	if (luaL_dofile(L, param1) != LUA_OK)
+	{
+		printf("wrong lua file\n");
+	}
+	return (0);		
+}
+
+static void next_cmd()
+{
+/* TODO: 跳过函数调用 */
+	ldb.step = 1;
+}
+static void step_cmd()
+{
+	ldb.step = 1;
 }
 
 int ldb_step()
@@ -61,52 +124,23 @@ int ldb_step()
 
 	if (strcmp(command, "b") == 0 || strcmp(command, "break") == 0)
 	{
-		switch (n)
-		{
-			case 1:
-				ldb_add_break(ldb.current_line, ldb.current_file);
-				break;
-			case 2:
-				ldb_add_break(atoi(param2), ldb.current_file);										
-				break;
-			case 3:
-				ldb_add_break(atoi(param2), param1);					
-				break;
-			default:
-				printf("break filename line\n");
-				break;
-		}
+		break_cmd(n, param1, param2);
+	}
+	else if (strcmp(command, "n") == 0 || strcmp(command, "next") == 0)
+	{
+		next_cmd();
+	}
+	else if (strcmp(command, "s") == 0 || strcmp(command, "step") == 0)
+	{
+		step_cmd();
 	}
 	else if (strcmp(command, "test") == 0)
 	{
-		if (n != 2)
-		{
-			printf("no param\n");
-			return (0);
-		}
-		lua_rawgetp(L, LUA_REGISTRYINDEX, &L);
-		lua_pushinteger(L, atoi(param1));
-		if (lua_pcall(L, 1, 0, 0) != LUA_OK)
-		{
-			luaL_checktype(L, -1, LUA_TSTRING);
-			printf("pcall fail, err = %s\n", lua_tostring(L, -1));
-			lua_pop(L, 1);
-		}
+		test_cmd(n, param1);
 	}
 	else if (strcmp(command, "r") == 0 || strcmp(command, "run") == 0)
 	{
-		if (n != 2)
-		{
-			printf("no lua file\n");
-			return (0);
-		}
-		if (luaL_dofile(L, "t2.lua") != LUA_OK)
-		{
-			printf("wrong lua file\n");
-		}
-	}
-	else if (strcmp(command, "r") == 0 || strcmp(command, "run") == 0)
-	{
+		run_cmd(n, param1);
 	}
 	else if (strcmp(command, "q") == 0 || strcmp(command, "quit") == 0)
 	{
@@ -120,7 +154,7 @@ int ldb_step()
 	if (lua_gettop(L) != 0)
 	{
 		printf("stack no empty\n");
-//			stack_dump(L, "all end");
+		stack_dump(L, "ldb step");
 	}
 	return (0);
 }
@@ -138,11 +172,12 @@ void luaLdbLineHook(lua_State *lua, lua_Debug *ar) {
     ldb.current_line = ar->currentline;
 	ldb.current_file = ar->source;
 
+//	printf("%s: %s %d\n", __FUNCTION__, ar->source, ar->currentline);
     int bp = ldb_is_break(ar->currentline, ar->source) || ldb.luabp;
 //    int timeout = 0;
 
     /* Events outside our script are not interesting. */
-    if(strstr(ar->short_src,"user_script") == NULL) return;
+//    if(strstr(ar->short_src,"user_script") == NULL) return;
 
     /* Check if a timeout occurred. */
 //    if (ar->event == LUA_HOOKCOUNT && ldb.step == 0 && bp == 0) {
