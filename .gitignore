@@ -1,9 +1,10 @@
 *.o
 lua
-.gitignore
 cscope*
 *.a
 *.so
 *~
 #*
+stack_test/test1
+stack_test/test2
 

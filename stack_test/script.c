@@ -186,11 +186,6 @@ void ldb_loop()
 {
 	while (ldb_step() == 0)
 	{
-		if (lua_gettop(L) != 0)
-		{
-			printf("stack no empty\n");
-			stack_dump(L, "ldb step");
-		}
 	}
 }
 
