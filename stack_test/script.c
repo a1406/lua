@@ -14,6 +14,7 @@ struct ldb_break
 {
 	int linenum;
 	char *filename;
+	char *function;
 };
 
 struct ldb
@@ -44,8 +45,54 @@ int ldb_add_break(int line, const char *filename)
 		return -1;
 	ldb.bp[ldb.bpcount].filename = strdup(filename);
 	ldb.bp[ldb.bpcount].linenum = line;
+	ldb.bp[ldb.bpcount].function = NULL;
 	++ldb.bpcount;
 	return (0);
+}
+
+int ldb_add_func_break(char *function)
+{
+	if (ldb.bpcount >= LDB_BREAKPOINTS_MAX - 1)
+		return -1;
+	ldb.bp[ldb.bpcount].filename = NULL;
+	ldb.bp[ldb.bpcount].function = strdup(function);
+	++ldb.bpcount;
+	return (0);
+}
+
+void ldb_del_break(int n)
+{
+	if (n >= 0 && n < ldb.bpcount)
+	{
+		if (ldb.bp[n].filename)
+			free(ldb.bp[n].filename);
+		else
+			free(ldb.bp[n].function);
+		memmove(&ldb.bp[n], &ldb.bp[n+1], (ldb.bpcount - n - 1) * sizeof(struct ldb_break));
+		--ldb.bpcount;
+		return;
+	}
+	if (n < 0)
+	{
+		for (int i = 0; i < ldb.bpcount; ++i)
+		{
+			if (ldb.bp[i].filename)
+				free(ldb.bp[i].filename);
+			else
+				free(ldb.bp[i].function);
+		}
+		ldb.bpcount = 0;
+	}
+}
+
+static void	del_cmd(int n, char *param1, char *param2)
+{
+	if (n == 1)
+	{
+		ldb_del_break(-1);
+		return;
+	}
+	ldb_del_break(atoi(param1));
 }
 
 static void break_cmd(int n, char *param1, char *param2)
@@ -282,7 +329,7 @@ static void info_cmd(int n, char *param1)
 	{
 		for (int i = 0; i < ldb.bpcount; ++i)
 		{
-			printf("break file[%s] line[%d]\n", ldb.bp[i].filename, ldb.bp[i].linenum);
+			printf("%d: break file[%s] line[%d]\n", i, ldb.bp[i].filename, ldb.bp[i].linenum);
 		}
 	}
 	if (strcmp(param1, "s") == 0 || strcmp(param1, "stack") == 0)
@@ -349,6 +396,11 @@ int ldb_step()
 	{
 		next_cmd();
 		return 1;
+	}
+	else if (strcmp(command, "d") == 0 || strcmp(command, "del") == 0)
+	{
+		del_cmd(n, param1, param2);
+		return 0;
 	}
 	else if (strcmp(command, "s") == 0 || strcmp(command, "step") == 0)
 	{
