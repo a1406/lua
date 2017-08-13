@@ -15,10 +15,12 @@ function init_t3()
 	print "function t3f2"
     end
     g_ff[3] = function ()
-	local a = 100
+        local a = 100
+	local b = 200
+	local c = 300
 	print ("a = ", a)
 	print_t1()
-	a = a + 200;
+	a = a + b + c;
 	print ("a = ", a)	
 	a = a * 100
 	print ("a = ", a)	
