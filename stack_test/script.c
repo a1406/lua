@@ -291,6 +291,29 @@ static void info_cmd(int n, char *param1)
 	}
 }
 
+void ldbPrint(lua_State *lua, char *varname) {
+    lua_Debug ar;
+
+    int l = 0; /* Stack level. */
+    while (lua_getstack(lua,l,&ar) != 0) {
+        l++;
+        const char *name;
+        int i = 1; /* Variable index. */
+        while((name = lua_getlocal(lua,&ar,i)) != NULL) {
+            i++;
+            if (strcmp(varname,name) == 0) {
+                ldbLogStackValue(lua,"<value> ");
+                lua_pop(lua,1);
+                return;
+            } else {
+                lua_pop(lua,1); /* Discard the var name on the stack. */
+            }
+        }
+    }
+
+	printf("No such variable.\n");
+}
+
 static void	print_cmd(int n, char *param1)
 {
 	if (n != 2)
@@ -298,7 +321,7 @@ static void	print_cmd(int n, char *param1)
 		ldbPrintAll();
 		return;
 	}
-	
+	ldbPrint(L, param1);
 }
 
 static void continue_cmd()
