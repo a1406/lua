@@ -26,14 +26,29 @@ struct ldb
 	const char *current_file;
 	int current_line;
 	const char *function;
+	const char *last_function;
 };
 
 struct ldb ldb;
 
-int ldb_is_break(int line, const char *filename)
+static int ldb_is_func_break(const char *function)
 {
 	for (int i = 0; i < ldb.bpcount; ++i)
 	{
+		if (!ldb.bp[i].function)
+			continue;
+		if (strcmp(function, ldb.bp[i].function) == 0)
+			return (1);			
+	}
+	return (0);
+}
+
+static int ldb_is_break(int line, const char *filename)
+{
+	for (int i = 0; i < ldb.bpcount; ++i)
+	{
+		if (!ldb.bp[i].filename)
+			continue;			
 		if (line == ldb.bp[i].linenum && strcmp(filename+1, ldb.bp[i].filename) == 0)
 			return (1);
 	}
@@ -475,8 +490,16 @@ void luaLdbLineHook(lua_State *lua, lua_Debug *ar) {
 	ldb.current_file = ar->source + 1;
 	ldb.function = ar->name ? ar->name : "top level";
 
+	int func_bp = 0;
+		//enter function
+	if (!ldb.last_function || strcmp(ldb.last_function, ldb.function) != 0)
+	{
+		func_bp = ldb_is_func_break(ldb.function);
+		ldb.last_function = ldb.function;		
+	}
+
 //	printf("%s: %s %d\n", __FUNCTION__, ar->source, ar->currentline);
-    int bp = ldb_is_break(ar->currentline, ar->source) || ldb.luabp;
+    int bp = func_bp || ldb_is_break(ar->currentline, ar->source) || ldb.luabp;
 //    int timeout = 0;
 
     /* Events outside our script are not interesting. */
