@@ -1,3 +1,5 @@
+g_int = 100
+
 function print_t2()
 	print "print_t2"
 end
@@ -15,6 +17,7 @@ function init_t3()
 	print "function t3f2"
     end
     g_ff[3] = function ()
+	g_int = g_int + 1
         local a = 100
 	local b = 200
 	local c = 300

@@ -7,6 +7,7 @@
 #include "lauxlib.h"
 
 extern struct lua_State *L;
+extern int ldb_exit;
 extern void stack_dump(lua_State* L, char *head);
 
 #define LDB_BREAKPOINTS_MAX 10
@@ -391,7 +392,10 @@ void ldbPrint(lua_State *lua, char *varname) {
         }
     }
 
-	printf("No such variable.\n");
+	lua_getglobal(lua, varname);
+	ldbLogStackValue(lua,"<value> ");	
+	lua_pop(lua, 1);
+//	printf("No such variable.\n");
 }
 
 static void	print_cmd(int n, char *param1)
@@ -466,6 +470,7 @@ int ldb_step()
 	}
 	else if (strcmp(command, "q") == 0 || strcmp(command, "quit") == 0)
 	{
+		ldb_exit = 1;
 		return (-1);
 	}
 	else

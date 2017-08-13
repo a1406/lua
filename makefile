@@ -90,6 +90,7 @@ ALL_O= $(CORE_O) $(LUA_O) $(LUAC_O) $(AUX_O) $(LIB_O)
 ALL_A= $(CORE_T)
 
 all:	$(ALL_T)
+	make -C stack_test
 
 o:	$(ALL_O)
 

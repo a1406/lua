@@ -41,6 +41,7 @@ void stack_dump(lua_State* L, char *head)
 }
 
 struct lua_State *L;
+int ldb_exit = 0;
 
 int main(int argc, char *argv[])
 {
@@ -120,7 +121,12 @@ int main(int argc, char *argv[])
 	lua_pushinteger(L, 3);
 	lua_pcall(L, 1, 0, 0);
 
-	ldb_loop();
+	for (;!ldb_exit;)
+	{
+		ldb_loop();
+		if (lua_gettop(L) != 0)
+			stack_dump(L, "finish loop");
+	}
 
 	if (lua_gettop(L) != 0)
 	{
