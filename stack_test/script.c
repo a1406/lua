@@ -25,6 +25,7 @@ struct ldb
 	int luabp;  /* Stop at next line because redis.breakpoint() was called. */
 	const char *current_file;
 	int current_line;
+	const char *function;
 };
 
 struct ldb ldb;
@@ -103,8 +104,18 @@ static void break_cmd(int n, char *param1, char *param2)
 			ldb_add_break(ldb.current_line, ldb.current_file);
 			break;
 		case 2:
-			ldb_add_break(atoi(param2), ldb.current_file);										
-			break;
+		{
+			int line = atoi(param1);
+			if (line == 0 && param1[0] != '0')
+			{
+				ldb_add_func_break(param1);
+			}
+			else
+			{
+				ldb_add_break(line, ldb.current_file);
+			}
+		}
+		break;
 		case 3:
 			ldb_add_break(atoi(param2), param1);					
 			break;
@@ -329,7 +340,14 @@ static void info_cmd(int n, char *param1)
 	{
 		for (int i = 0; i < ldb.bpcount; ++i)
 		{
-			printf("%d: break file[%s] line[%d]\n", i, ldb.bp[i].filename, ldb.bp[i].linenum);
+			if (ldb.bp[i].function)
+			{
+				printf("%d: break function[%s]\n", i, ldb.bp[i].function);
+			}
+			else
+			{
+				printf("%d: break file[%s] line[%d]\n", i, ldb.bp[i].filename, ldb.bp[i].linenum);
+			}
 		}
 	}
 	if (strcmp(param1, "s") == 0 || strcmp(param1, "stack") == 0)
@@ -452,9 +470,10 @@ void ldb_loop()
 
 void luaLdbLineHook(lua_State *lua, lua_Debug *ar) {
     lua_getstack(lua,0,ar);
-    lua_getinfo(lua,"Sl",ar);
+    lua_getinfo(lua,"Snl",ar);
     ldb.current_line = ar->currentline;
-	ldb.current_file = ar->source;
+	ldb.current_file = ar->source + 1;
+	ldb.function = ar->name ? ar->name : "top level";
 
 //	printf("%s: %s %d\n", __FUNCTION__, ar->source, ar->currentline);
     int bp = ldb_is_break(ar->currentline, ar->source) || ldb.luabp;
