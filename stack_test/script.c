@@ -99,6 +99,25 @@ static int run_cmd(int n, char *param1)
 	return (0);		
 }
 
+void ldbTrace()
+{
+    lua_Debug ar;
+    int level = 0;
+
+    while(lua_getstack(L,level,&ar)) {
+        lua_getinfo(L,"Snl",&ar);
+		
+		printf("#%d in %s()   at %s:%d\n", level,
+			ar.name ? ar.name : "top level",
+			ar.source, ar.currentline);
+//		ldbLogSourceLine(ar.currentline);
+        level++;
+    }
+    if (level == 0) {
+        printf("<error> Can't retrieve Lua stack.\n");
+    }
+}
+
 static void next_cmd()
 {
 /* TODO: 跳过函数调用 */
@@ -111,12 +130,16 @@ static void step_cmd()
 
 static void info_cmd(int n, char *param1)
 {
-	if (strcmp(param1, "b") == 0 || strcmp(param1, "break"))
+	if (strcmp(param1, "b") == 0 || strcmp(param1, "break") == 0)
 	{
 		for (int i = 0; i < ldb.bpcount; ++i)
 		{
 			printf("break file[%s] line[%d]\n", ldb.bp[i].filename, ldb.bp[i].linenum);
 		}
+	}
+	if (strcmp(param1, "s") == 0 || strcmp(param1, "stack") == 0)
+	{
+		ldbTrace();
 	}
 }
 
