@@ -72,7 +72,7 @@ static void printLine(const char *filename, int start, int end)
 static void print_cur_line()
 {
     lua_Debug ar;
-	if (lua_getstack(L,0,&ar))
+	if (lua_getstack(L,ldb.current_frame,&ar))
 	{
         lua_getinfo(L,"Sl",&ar);
 		printLine(ar.source, ar.currentline, ar.currentline);
@@ -262,8 +262,13 @@ void ldbTrace()
 
     while(lua_getstack(L,level,&ar)) {
         lua_getinfo(L,"Snl",&ar);
+
+		if (level == ldb.current_frame)
+			printf("=>");
+		else
+			printf("##");
 		
-		printf("#%d in %s()   at %s:%d\n", level,
+		printf("%d in %s()   at %s:%d\n", level,
 			ar.name ? ar.name : "top level",
 			ar.source, ar.currentline);
 //		ldbLogSourceLine(ar.currentline);
@@ -494,13 +499,15 @@ static void continue_cmd()
 {
 }
 
-int ldb_step()
+int ldb_step(int *printline)
 {
 	static char ldb_buf[1024];
 	char command[64], param1[128], param2[64];
 
-	print_cur_line();
+	if (*printline)
+		print_cur_line();
 	printf("$>>>> ");
+	*printline = 0;
 	
 	fgets(ldb_buf, 1024, stdin);
 
@@ -550,6 +557,7 @@ int ldb_step()
 	else if (strcmp(command, "f") == 0 || strcmp(command, "frame") == 0)
 	{
 		frame_cmd(n, param1);
+		*printline = 1;		
 		return 0;
 	}		
 	else if (strcmp(command, "r") == 0 || strcmp(command, "run") == 0)
@@ -572,7 +580,8 @@ int ldb_step()
 
 void ldb_loop()
 {
-	while (ldb_step() == 0)
+	int print = 1;
+	while (ldb_step(&print) == 0)
 	{
 	}
 }
