@@ -29,7 +29,11 @@ function init_t3()
 	print ("a = ", a)	
 	print "function t3f3"
     end
-    
+
+    test_ff[1] = 11
+    test_ff[2] = 22
+    test_ff[111] = "adf"
+    test_ff["222"] = {1,2,3}
 end
 
 

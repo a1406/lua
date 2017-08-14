@@ -1,4 +1,5 @@
 g_ff = {}
+test_ff = {}
 
 function recv_func(id)
     if (g_ff[id] ~= nil)
