@@ -227,6 +227,20 @@ static int test_cmd(int n, char *param1)
 	return (0);	
 }
 
+static void frame_cmd(int n, char *param1)
+{
+	if (n != 2)
+	{
+		printf("frame n\n");
+		return;
+	}
+	n = atoi(param1);
+	int frame = get_frame_depth();
+	if (n < 0 || n >= frame)
+		n = 0;
+	ldb.current_frame = n;
+}
+
 static int run_cmd(int n, char *param1)
 {
 	if (n != 2)
@@ -381,7 +395,7 @@ void ldbPrintAll()
     lua_Debug ar;
     int vars = 0;
 
-    if (lua_getstack(L,0,&ar) != 0) {
+    if (lua_getstack(L,ldb.current_frame,&ar) != 0) {
         const char *name;
         int i = 1; /* Variable index. */
         while((name = lua_getlocal(L,&ar,i)) != NULL) {
@@ -444,9 +458,8 @@ static void info_cmd(int n, char *param1)
 void ldbPrint(lua_State *lua, char *varname) {
     lua_Debug ar;
 
-    int l = 0; /* Stack level. */
-    while (lua_getstack(lua,l,&ar) != 0) {
-        l++;
+    int l = ldb.current_frame; /* Stack level. */
+    if (lua_getstack(lua,l,&ar) != 0) {
         const char *name;
         int i = 1; /* Variable index. */
         while((name = lua_getlocal(lua,&ar,i)) != NULL) {
@@ -533,7 +546,12 @@ int ldb_step()
 	{
 		print_cmd(n, param1);
 		return 0;
-	}	
+	}
+	else if (strcmp(command, "f") == 0 || strcmp(command, "frame") == 0)
+	{
+		frame_cmd(n, param1);
+		return 0;
+	}		
 	else if (strcmp(command, "r") == 0 || strcmp(command, "run") == 0)
 	{
 		run_cmd(n, param1);
@@ -565,6 +583,7 @@ void luaLdbLineHook(lua_State *lua, lua_Debug *ar) {
     ldb.current_line = ar->currentline;
 	ldb.current_file = ar->source + 1;
 	ldb.function = ar->name ? ar->name : "top level";
+	ldb.current_frame = 0;
 
 	int bp = 0;
 		//enter function
