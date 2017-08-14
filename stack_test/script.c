@@ -291,8 +291,11 @@ void ldbCatStackValueRec(lua_State *lua, int idx, int level)
 {
     int t = lua_type(lua,idx);
 
-    if (level++ == LDB_MAX_VALUES_DEPTH)
-        printf("<max recursion level reached! Nested table?>");
+    if (level++ >= LDB_MAX_VALUES_DEPTH)
+	{
+        printf("<max recursion level reached! Nested table?>\n");
+		return;
+	}
 
     switch(t) {
 		case LUA_TSTRING:
