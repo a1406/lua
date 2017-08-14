@@ -109,6 +109,7 @@ $(LUAC_T): $(LUAC_O) $(CORE_T)
 clean:
 	rcsclean -u
 	$(RM) $(ALL_T) $(ALL_O)
+	make -C stack_test clean
 
 depend:
 	@$(CC) $(CFLAGS) -MM *.c

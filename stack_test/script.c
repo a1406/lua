@@ -24,6 +24,8 @@ struct ldb
 	int bpcount; /* Number of valid entries inside bp. */
 	int step;   /* Stop at next line ragardless of breakpoints. */	
 	int luabp;  /* Stop at next line because redis.breakpoint() was called. */
+	int frame_depth;
+	int current_frame;
 	const char *current_file;
 	int current_line;
 	const char *function;
@@ -31,6 +33,51 @@ struct ldb
 };
 
 struct ldb ldb;
+
+static void printLine(const char *filename, int start, int end)
+{
+	if (filename[0] == '@')
+		++filename;
+	++end;
+
+	FILE* fp = fopen(filename, "r");
+	if(!fp)
+	{
+		printf("can not open %s\n", filename);
+		return;
+	}
+
+	int i = 1;
+	char buffer[1024];
+	while(fgets(buffer, 1024, fp))
+	{
+		if (i >= end)
+			break;
+		if(i >= start)
+		{
+			int len = strlen(buffer);
+			if(buffer[len - 1] == '\r' || buffer[len - 1] == '\n')
+			{
+				buffer[len - 1] = '\0';
+			}
+			printf("%03d	%s\n", i, buffer);
+			break;
+		}
+		i++;
+	}
+	
+	fclose(fp);
+}
+
+static void print_cur_line()
+{
+    lua_Debug ar;
+	if (lua_getstack(L,0,&ar))
+	{
+        lua_getinfo(L,"Sl",&ar);
+		printLine(ar.source, ar.currentline, ar.currentline);
+	}
+}
 
 static int ldb_is_func_break(const char *function)
 {
@@ -41,6 +88,27 @@ static int ldb_is_func_break(const char *function)
 		if (strcmp(function, ldb.bp[i].function) == 0)
 			return (1);			
 	}
+	return (0);
+}
+
+static int get_frame_depth()
+{
+    lua_Debug ar;
+    int level = 0;
+
+    while(lua_getstack(L,level,&ar)) {
+        level++;
+    }
+	return level;
+}
+
+static int ldb_is_next_break()
+{
+	if (!ldb.luabp)
+		return (0);
+	int frame = get_frame_depth();
+	if (frame <= ldb.frame_depth)
+		return (1);
 	return (0);
 }
 
@@ -338,7 +406,8 @@ void ldbPrintAll()
 static void next_cmd()
 {
 /* TODO: 跳过函数调用 */
-	ldb.step = 1;
+	ldb.frame_depth = get_frame_depth();
+	ldb.luabp = 1;
 }
 static void step_cmd()
 {
@@ -417,6 +486,7 @@ int ldb_step()
 	static char ldb_buf[1024];
 	char command[64], param1[128], param2[64];
 
+	print_cur_line();
 	printf("$>>>> ");
 	
 	fgets(ldb_buf, 1024, stdin);
@@ -455,7 +525,8 @@ int ldb_step()
 	}
 	else if (strcmp(command, "c") == 0 || strcmp(command, "continue") == 0)
 	{
-		continue_cmd(n, param1);
+//		continue_cmd(n, param1);
+		continue_cmd();
 		return 1;
 	}
 	else if (strcmp(command, "p") == 0 || strcmp(command, "print") == 0)
@@ -495,16 +566,22 @@ void luaLdbLineHook(lua_State *lua, lua_Debug *ar) {
 	ldb.current_file = ar->source + 1;
 	ldb.function = ar->name ? ar->name : "top level";
 
-	int func_bp = 0;
+	int bp = 0;
 		//enter function
 	if (!ldb.last_function || strcmp(ldb.last_function, ldb.function) != 0)
 	{
-		func_bp = ldb_is_func_break(ldb.function);
-		ldb.last_function = ldb.function;		
+		ldb.last_function = ldb.function;
+		bp = ldb_is_func_break(ldb.function);
 	}
 
+	if (!bp)
+		bp = ldb_is_next_break();
+
+	if (!bp)
+		bp = ldb_is_break(ar->currentline, ar->source);
+
 //	printf("%s: %s %d\n", __FUNCTION__, ar->source, ar->currentline);
-    int bp = func_bp || ldb_is_break(ar->currentline, ar->source) || ldb.luabp;
+//    int bp = func_bp || ldb_is_break(ar->currentline, ar->source) || ldb.luabp;
 //    int timeout = 0;
 
     /* Events outside our script are not interesting. */
@@ -524,13 +601,13 @@ void luaLdbLineHook(lua_State *lua, lua_Debug *ar) {
 //    }
 
     if (ldb.step || bp) {
-        char *reason = "step over";
-        if (bp) reason = ldb.luabp ? "redis.breakpoint() called" :
-                                     "break point";
-//        else if (timeout) reason = "timeout reached, infinite loop?";
         ldb.step = 0;
         ldb.luabp = 0;
 		ldb_loop();
+//        char *reason = "step over";
+//        if (bp) reason = ldb.luabp ? "redis.breakpoint() called" :
+//                                     "break point";
+//        else if (timeout) reason = "timeout reached, infinite loop?";
 //        ldbLog(sdscatprintf(sdsempty(),
 //            "* Stopped at %d, stop reason = %s",
 //            ldb.currentline, reason));
