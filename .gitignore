@@ -8,4 +8,5 @@ cscope*
 #*
 stack_test/test1
 stack_test/test2
+stack_test/test_global
 
