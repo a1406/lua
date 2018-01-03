@@ -12,7 +12,7 @@ static const char * load_config = "\
 	return result\
 ";
 
-int testfunc1(lua_State *L, char *lua_file_name)
+int testfunc1(lua_State *L, const char *lua_file_name)
 {
 	if (1 == luaL_dofile(L, lua_file_name))
 	{
@@ -37,8 +37,8 @@ int testfunc1(lua_State *L, char *lua_file_name)
 }
 
 int main(int argc, char *argv[])
-{
-	char *config_file = "config.lua";
+{	
+	const char *config_file = "config.lua";
 	struct lua_State *L = luaL_newstate();
 	luaL_openlibs(L);	  // link lua lib
 

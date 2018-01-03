@@ -4,7 +4,7 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-static void stack_dump(lua_State* L, char *head)
+static void stack_dump(lua_State* L, const char *head)
 {
     int i;
     int top = lua_gettop(L);
@@ -32,5 +32,5 @@ static void stack_dump(lua_State* L, char *head)
         printf("  ");  /* put a separator */
     }
     printf("\n============\n");     /* end the listing */
-};
+}
 

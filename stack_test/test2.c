@@ -9,6 +9,9 @@ int ldb_exit = 0;
 
 int main(int argc, char *argv[])
 {
+	(void)(argc);
+	(void)(argv);
+	
 	int ret;
 	L = luaL_newstate();
 

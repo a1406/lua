@@ -1,8 +1,15 @@
-#include "stack_test/stack_dump.h"
+#include <stdio.h>
+#include <assert.h>
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 
 int main(int argc, char *argv[])
 {
 	struct lua_State *L;	
+	
+	(void)(argc);
+	(void)(argv);
 	L = luaL_newstate();
 
 	luaL_openlibs(L);	  // link lua lib
