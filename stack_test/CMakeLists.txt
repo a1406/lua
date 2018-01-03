@@ -1,7 +1,7 @@
 remove_definitions(${CFLAGS})
 remove_definitions(${CWARNS})
 remove_definitions(${LDFLAGS})
-add_definitions( -g -O0 -I.. -L..)
+add_definitions( -g -O0)
 link_libraries(m)
 link_libraries(dl)
 link_libraries(lua)
