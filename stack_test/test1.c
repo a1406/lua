@@ -40,7 +40,6 @@ int main(int argc, char *argv[])
 {
 	char *config_file = "config.lua";
 	struct lua_State *L = luaL_newstate();
-
 	luaL_openlibs(L);	  // link lua lib
 
 //	testfunc1(L, "EscortTask.lua");
@@ -73,7 +72,6 @@ int main(int argc, char *argv[])
 		lua_close(L);
 		return 1;
 	}
-
 	lua_close(L);
 	return 0;
 }
