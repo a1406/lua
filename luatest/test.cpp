@@ -10,6 +10,7 @@
 extern "C"
 {
 #include "stack_test/stack_dump.h"
+#include "myapi.h"	
 };
 
 
@@ -20,6 +21,15 @@ set<int> all_raid;
 
 void init_lua(struct lua_State *L)
 {
+	lua_pushboolean(L, false);
+	lua_pushinteger(L, 99999);
+	lua_pushnumber(L, 5.555);
+	lua_pushstring(L, "abc");	
+	lua_pushstring(L, "abc");
+	lua_pushstring(L, "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");	
+	print_stack(L);
+	lua_pop(L, lua_gettop(L));
+	
 	luaL_openlibs(L);	  // link lua lib
 	luaL_loadfile(L, "test.lua");
 	lua_pcall(L, 0, 0, 0);
