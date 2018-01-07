@@ -1,34 +1,48 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-project(lua)
+PROJECT(lua)
 
-FILE(GLOB SRC_LIST
-  "./*.c"
-  )
-list(REMOVE_ITEM SRC_LIST "${CMAKE_CURRENT_SOURCE_DIR}/./lua.c")
-#message(${SRC_LIST})
-
-set (CFLAGS -Wall -g  -O0 -std=c99 -DLUA_USE_LINUX -DLUA_COMPAT_5_2)
-set (CWARNS -pedantic -Wextra -Wshadow -Wsign-compare -Wundef -Wwrite-strings -Wredundant-decls -Wdisabled-optimization -Waggregate-return -Wdouble-promotion   -Wdeclaration-after-statement -Wmissing-prototypes -Wnested-externs -Wstrict-prototypes -Wc++-compat -Wold-style-definition)
-set (LDFLAGS -g -Wl,-E)
-
-add_definitions(${CFLAGS})
-add_definitions(${CWARNS})
-add_definitions(${LDFLAGS})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
-link_directories(${CMAKE_CURRENT_SOURCE_DIR})
+LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+ADD_DEFINITIONS(-DLUA_USE_LINUX -DLUA_COMPAT_5_2 -g -O0)
+SET (CFLAGS -std=c99)
+SET (CWARNS -pedantic -Wextra -Wshadow -Wsign-compare -Wundef -Wwrite-strings -Wredundant-decls -Wdisabled-optimization -Waggregate-return -Wdouble-promotion   -Wdeclaration-after-statement -Wmissing-prototypes -Wnested-externs -Wstrict-prototypes -Wc++-compat -Wold-style-definition)
+SET (LDFLAGS -Wl,-E)
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+FUNCTION (build_lualib)
+  FILE(GLOB SRC_LIST
+    "./*.c"
+    )
+  LIST(REMOVE_ITEM SRC_LIST "${CMAKE_CURRENT_SOURCE_DIR}/./lua.c")
+  #MESSAGE(${SRC_LIST})
+  ADD_LIBRARY  (lualib ${SRC_LIST})
 
-add_library  (lua ${SRC_LIST})
-add_subdirectory(stack_test)
+  SET (LUALIB_FLAGS ${CWARNS} ${CFLAGS} ${CXXFLAGS} ${LDFLAGS})
+  SET_TARGET_PROPERTIES(lualib PROPERTIES
+    COMPILE_OPTIONS "${LUALIB_FLAGS}"
+    OUTPUT_NAME "lua"      
+    )
+ENDFUNCTION()  
 
-FILE(GLOB SRC_LIST
-  "./lua.c"
-  )
+FUNCTION (build_lua)
+  FILE(GLOB SRC_LIST
+    "./lua.c"
+    )
+  ADD_EXECUTABLE  (clua ${SRC_LIST})
+  
+  TARGET_LINK_LIBRARIES(clua lua)
+  TARGET_LINK_LIBRARIES(clua m)
+  TARGET_LINK_LIBRARIES(clua dl)
+  TARGET_LINK_LIBRARIES(clua readline)
 
-link_libraries(lua)
-link_libraries(m)
-link_libraries(dl)
-link_libraries(readline)
-add_executable  (clua ${SRC_LIST})
-set_target_properties(clua PROPERTIES OUTPUT_NAME "lua")
+  SET (LUA_FLAGS ${CWARNS} ${CFLAGS} ${CXXFLAGS} ${LDFLAGS})  
+  SET_TARGET_PROPERTIES(clua PROPERTIES
+    COMPILE_OPTIONS "${LUA_FLAGS}"
+    OUTPUT_NAME "lua"      
+    )
+ENDFUNCTION()  
+
+ADD_SUBDIRECTORY(stack_test)
+ADD_SUBDIRECTORY(luatest)
+build_lua()
+build_lualib()

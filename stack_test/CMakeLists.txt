@@ -1,10 +1,6 @@
-remove_definitions(${CFLAGS})
-remove_definitions(${CWARNS})
-remove_definitions(${LDFLAGS})
-add_definitions( -g -O0)
-link_libraries(m)
-link_libraries(dl)
-link_libraries(lua)
+LINK_LIBRARIES(m)
+LINK_LIBRARIES(dl)
+LINK_LIBRARIES(lua)
 
 add_executable  (test1 test1.c)
 add_executable  (test2 test2.c script.c)
