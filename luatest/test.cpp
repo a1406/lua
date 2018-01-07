@@ -19,12 +19,24 @@ static int raid_uuid;
 static int monster_uuid;
 set<int> all_raid;
 
+int c_func (lua_State *L)
+{
+	static int val;
+	++val;
+	double a = lua_tonumber(L, -1);
+	long long b = lua_tointeger(L, -2);
+	printf("%s %d: %d, %lf, %lld\n", __FUNCTION__, __LINE__, val, a, b);
+	return (0);
+}
+
 void init_lua(struct lua_State *L)
 {
+	int type = lua_getglobal(L, "ailib");
+	printf("get test1 return %d\n", type);
+	
 	lua_pushboolean(L, false);
 	lua_pushinteger(L, 99999);
 	lua_pushnumber(L, 5.555);
-	lua_pushstring(L, "abc");	
 	lua_pushstring(L, "abc");
 	lua_pushstring(L, "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");	
 	print_stack(L);
@@ -34,14 +46,14 @@ void init_lua(struct lua_State *L)
 	luaL_loadfile(L, "test.lua");
 	lua_pcall(L, 0, 0, 0);
 
-// 	int type = lua_getglobal(L, "ailib");
-// 	printf("get test1 return %d\n", type);
-// 	lua_pushstring(L, "test1");
-// 	type = lua_gettable(L, -2);
-// 	printf("get table return %d\n", type);
-// 	stack_dump(L, "gettable");
-// 	lua_pcall(L, 0, 0, 0);
-// 	stack_dump(L, "luapcall");	
+
+	lua_getglobal(L, "ailib");
+	lua_pushstring(L, "test1");
+	lua_gettable(L, -2);
+	lua_pushcfunction(L, c_func);
+	lua_pcall(L, 1, 0, 0);
+	lua_pop(L, 1);
+	assert(lua_gettop(L) == 0);						
 }
 
 #define MAX_GM_ARGV 10

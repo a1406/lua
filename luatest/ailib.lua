@@ -1,7 +1,10 @@
 ailib = {}
 
-function ailib.test1()
+function ailib.test1(cfunc)
     print("calling ailib.test1")
+    cfunc(1, 2)
+    cfunc(3, 4)
+    cfunc(5, 5)    
 end
 
 function ailib.get_monster_num(raid, monster_id)

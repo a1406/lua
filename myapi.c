@@ -54,3 +54,8 @@ void print_stack(struct lua_State *L)
 	}
 	printf("finished\n");	
 }
+
+void print_global(struct lua_State *L)
+{
+	Table *reg = hvalue(&G(L)->l_registry);	
+}
