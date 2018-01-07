@@ -24,8 +24,14 @@ void init_lua(struct lua_State *L)
 	luaL_loadfile(L, "test.lua");
 	lua_pcall(L, 0, 0, 0);
 
-	int type = lua_getglobal(L, "ailib");
-	printf("get test1 return %d\n", type);
+// 	int type = lua_getglobal(L, "ailib");
+// 	printf("get test1 return %d\n", type);
+// 	lua_pushstring(L, "test1");
+// 	type = lua_gettable(L, -2);
+// 	printf("get table return %d\n", type);
+// 	stack_dump(L, "gettable");
+// 	lua_pcall(L, 0, 0, 0);
+// 	stack_dump(L, "luapcall");	
 }
 
 #define MAX_GM_ARGV 10
@@ -94,6 +100,14 @@ int main(int argc, char *argv[])
 					++raid_uuid;
 					all_raid.insert(raid_uuid);
 					printf("add_raid %d\n", raid_uuid);
+					lua_getglobal(L, "ailib");
+					lua_pushstring(L, "create_raid");
+					lua_gettable(L, -2);
+					lua_pushinteger(L, raid_uuid);
+					lua_pcall(L, 1, 0, 0);
+					lua_pop(L, 1);
+//					stack_dump(L, "luapcall");
+					assert(lua_gettop(L) == 0);					
 				}
 				else if (strcmp(cmd_argv[0], "del_raid") == 0)
 				{
@@ -142,7 +156,25 @@ int main(int argc, char *argv[])
 						printf("can not find raid %d\n", uuid);
 						continue;
 					}
-					printf("kill_monster[%d] at raid %d\n", monster_uuid, uuid);						
+					printf("kill_monster[%d] at raid %d\n", monster_uuid, uuid);
+					lua_getglobal(L, "ailib");
+					lua_pushstring(L, "del_monster");
+					lua_gettable(L, -2);
+					lua_pushinteger(L, uuid);
+					lua_pushinteger(L, 0);
+					lua_pushinteger(L, monster_uuid);					
+					int ret = lua_pcall(L, 3, 0, 0);
+					if (ret != 0)
+					{
+						printf("luapcall ret %d\n", ret);
+						lua_pop(L, 2);
+					}
+					else
+					{
+						lua_pop(L, 1);
+					}
+//					stack_dump(L, "luapcall");
+					assert(lua_gettop(L) == 0);
 				}
 				else
 				{
