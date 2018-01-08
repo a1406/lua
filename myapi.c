@@ -1,4 +1,7 @@
 #include "myapi.h"
+#include "lobject.h"
+#include "ltable.h"
+#include "lapi.h"
 #include "lstate.h"
 #include <stdio.h>
 
@@ -58,4 +61,44 @@ void print_stack(struct lua_State *L)
 void print_global(struct lua_State *L)
 {
 	Table *reg = hvalue(&G(L)->l_registry);	
+}
+
+void print_tablesize(struct lua_State *L, int idx)
+{
+	TValue *k1 = index2value(L, idx);
+	Table *t;
+	int valid_array = 0;
+	int valid_node = 0;
+	int nodesize;
+	if (!ttistable(k1))
+	{
+		printf("not table\n");
+		return;
+	}
+	t = hvalue(k1);
+	for (unsigned int i = 0; i < t->sizearray; ++i)
+	{
+		TValue *tv = &t->array[i];
+		if (ttisnil(tv))
+			continue;
+		++valid_array;
+	}
+
+	nodesize = twoto(t->lsizenode);
+	for (int i = 0; i < nodesize; ++i)
+	{
+		Node *no = &t->node[i];
+		for (;;)
+		{
+			int nx;
+			TValue *tv = gval(no);
+			if (!ttisnil(tv))
+				++valid_node;
+			nx = gnext(no);
+			if (nx == 0) break;			
+			no += nx;
+		}
+	}
+	
+	printf("array[%d][%d] node[%d][%d]\n", t->sizearray, valid_array, nodesize, valid_node);
 }

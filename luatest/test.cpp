@@ -31,6 +31,22 @@ int c_func (lua_State *L)
 
 void init_lua(struct lua_State *L)
 {
+	lua_newtable(L);
+	for (int i = 0; i < 100; ++i)
+	{
+		lua_pushinteger(L, 100 + i);
+		lua_rawseti(L, -2, i - 20);
+	}
+	printf("after newtable\n");
+	print_tablesize(L, -1);
+
+	for (int i = 0; i < 100; ++i)
+	{
+		int ret = lua_rawgeti(L, -1, i - 20);
+		lua_pop(L, 1);
+		assert(ret == LUA_TNUMBER);
+	}
+	
 	int type = lua_getglobal(L, "ailib");
 	printf("get test1 return %d\n", type);
 	
@@ -46,8 +62,7 @@ void init_lua(struct lua_State *L)
 	luaL_loadfile(L, "test.lua");
 	lua_pcall(L, 0, 0, 0);
 
-
-	lua_getglobal(L, "ailib");
+	lua_getglobal(L, "ailib");	
 	lua_pushstring(L, "test1");
 	lua_gettable(L, -2);
 	lua_pushcfunction(L, c_func);

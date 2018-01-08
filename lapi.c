@@ -57,7 +57,7 @@ const char lua_ident[] =
 	api_check(l, isstackindex(i, o), "index not in the stack")
 
 
-static TValue *index2value (lua_State *L, int idx) {
+TValue *index2value (lua_State *L, int idx) {
   CallInfo *ci = L->ci;
   if (idx > 0) {
     StkId o = ci->func + idx;

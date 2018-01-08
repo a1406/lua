@@ -21,4 +21,5 @@
 				  "not enough elements in the stack")
 
 
+TValue *index2value (lua_State *L, int idx);
 #endif
