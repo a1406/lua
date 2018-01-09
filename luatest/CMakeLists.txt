@@ -3,7 +3,8 @@ LINK_LIBRARIES(dl)
 LINK_LIBRARIES(lua)
 
 ADD_EXECUTABLE  (ctest test.cpp)
-
 SET_TARGET_PROPERTIES(ctest PROPERTIES OUTPUT_NAME "test")
+
+ADD_EXECUTABLE  (test_upvalue test_upvalue.c)
 
 
