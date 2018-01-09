@@ -33,7 +33,7 @@ void init_lua(struct lua_State *L)
 	
 	luaL_loadfile(L, "test_upvalue.lua");
 	lua_pcall(L, 0, 0, 0);
-//	assert(lua_gettop(L) == 0);						
+	assert(lua_gettop(L) == 0);						
 }
 
 int main(int argc, char *argv[])
