@@ -5,6 +5,8 @@ LINK_LIBRARIES(lua)
 ADD_EXECUTABLE  (ctest test.cpp)
 SET_TARGET_PROPERTIES(ctest PROPERTIES OUTPUT_NAME "test")
 
+ADD_EXECUTABLE  (ctest2 test2.c)
+SET_TARGET_PROPERTIES(ctest2 PROPERTIES OUTPUT_NAME "test2")
 ADD_EXECUTABLE  (test_upvalue test_upvalue.c)
 
 

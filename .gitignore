@@ -11,6 +11,7 @@ stack_test/test1
 stack_test/test2
 stack_test/test_global
 luatest/test
+luatest/test[0-9]
 luatest/test_upvalue
 *CMake*
 Makefile
